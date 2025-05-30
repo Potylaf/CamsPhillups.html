@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cam's Phillups: Spud Sprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow-x: auto; 
+            overflow-y: hidden; 
+        }
+        .map-area {
+            width: 800px;
+            height: 600px;
+            background-color: #a0d2eb; 
+            background-image: 
+                linear-gradient(to bottom, transparent 95%, #78c850 95%), 
+                radial-gradient(circle at 100px 100px, #f0f0f0 10px, transparent 11px), 
+                radial-gradient(circle at 250px 150px, #f0f0f0 15px, transparent 16px), 
+                radial-gradient(circle at 500px 80px, #f0f0f0 12px, transparent 13px), 
+                radial-gradient(circle at 700px 120px, #f0f0f0 18px, transparent 19px); 
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #4a5568; 
+            cursor: pointer;
+        }
+        .food-truck {
+            width: 75px; 
+            height: 45px; 
+            background-color: #f56565; 
+            border: 2px solid #2d3748; 
+            border-radius: 6px 6px 0 0; 
+            position: absolute;
+            transition: transform 0.1s linear; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px; 
+            color: white;
+            font-weight: bold;
+            text-align: center; 
+            line-height: 1; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 10; 
+        }
+        .food-truck::before { 
+            content: '';
+            position: absolute;
+            top: 6px; 
+            left: 5px; 
+            width: 15px; 
+            height: 12px; 
+            background-color: #a0deff;
+            border-radius: 2px; 
+        }
+        .food-truck::after { 
+            content: '';
+            position: absolute;
+            bottom: -6px; 
+            left: 12px; 
+            width: 12px; 
+            height: 12px; 
+            background-color: #4a5568;
+            border-radius: 50%;
+            box-shadow: 35px 0 #4a5568; 
+        }
+        .customer {
+            width: 40px;
+            height: 40px;
+            background-color: #ecc94b; 
+            border: 2px solid #975a16; 
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px; 
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+        .order-bubble {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            color: #2d3748; 
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-size: 10px;
+            white-space: nowrap;
+            border: 1px solid #ccc;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
+        }
+        .patience-bar-container {
+            width: 100%;
+            height: 5px;
+            background-color: #e2e8f0; 
+            border-radius: 2px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+        .patience-bar {
+            height: 100%;
+            background-color: #48bb78; 
+            transition: width 0.2s linear, background-color 0.2s linear;
+            border-radius: 2px;
+        }
+        .road {
+            position: absolute;
+            background-color: #718096; 
+            height: 50px;
+            width: 100%;
+            bottom: 15%;
+            left: 0;
+            z-index: 0; 
+        }
+         .road::before { 
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(to right, white, white 20px, transparent 20px, transparent 40px);
+        }
+        .building {
+            position: absolute;
+            background-color: #cbd5e0; 
+            border: 2px solid #a0aec0; 
+            z-index: -1; 
+        }
+        .kitchen {
+            position: absolute;
+            width: 110px; 
+            height: 90px; 
+            background-color: #fefcbf; 
+            border: 3px solid #d69e2e; 
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: space-between; 
+            font-weight: bold;
+            color: #975a16; 
+            font-size: 14px;
+            box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            z-index: 1; 
+            padding: 5px 0; 
+        }
+        .kitchen::before { 
+            content: '';
+            position: absolute;
+            top: -15px;
+            right: 15px;
+            width: 15px;
+            height: 20px;
+            background-color: #b7791f; 
+            border-radius: 2px 2px 0 0;
+        }
+        .kitchen-sign {
+            font-size: 10px;
+            background-color: #d69e2e;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+        }
+        .kitchen-text { }
+        .kitchen-progress-container {
+            width: 80%;
+            height: 10px;
+            background-color: #e2e8f0;
+            border: 1px solid #b7791f;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .kitchen-progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #f59e0b; 
+            transition: width 0.1s linear;
+            border-radius: 2px;
+        }
+        .modal-overlay { /* For kitchen menu and ingredient station */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+        }
+        .modal-content {
+            background-color: #4a5568; 
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+            color: #e2e8f0; 
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #f6e05e; 
+        }
+        .modal-content p {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .modal-button { /* For kitchen menu items */
+            background-color: #667eea; 
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        .modal-button:hover:not(:disabled) {
+            background-color: #5a67d8; 
+        }
+        .modal-button:disabled {
+             background-color: #a0aec0;
+            color: #718096;
+            cursor: not-allowed;
+        }
+
+        .ingredient-button {
+            background-color: #f6e05e; 
+            color: #4a5568; 
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .ingredient-button:hover:not(:disabled) {
+            background-color: #f59e0b; 
+        }
+        .ingredient-button:disabled {
+            background-color: #a0aec0;
+            color: #718096;
+            cursor: not-allowed;
+        }
+        .ingredient-button.added {
+            background-color: #48bb78; 
+            color: white;
+            cursor: default;
+        }
+        .customer-table {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #a0522d; 
+            border: 3px solid #8b4513; 
+            border-radius: 8px; 
+            z-index: 0; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .customer-table::before, .customer-table::after { 
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #d2b48c; 
+            border-radius: 3px;
+        }
+        .customer-table::before {
+            top: -10px; left: 50%; transform: translateX(-50%);
+        }
+        .customer-table::after {
+            bottom: -10px; left: 50%; transform: translateX(-50%);
+        }
+        .tree {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background-color: #2f855a; 
+            border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%; 
+            z-index: -1;
+        }
+        .tree::after { 
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 15px;
+            background-color: #714523; 
+        }
+        .bush {
+            position: absolute;
+            width: 50px;
+            height: 30px;
+            background-color: #38a169; 
+            border-radius: 50%;
+            z-index: -1;
+        }
+        .trash-can {
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            background-color: #718096; 
+            border: 2px solid #4a5568; 
+            border-radius: 3px 3px 0 0;
+            z-index: 0;
+        }
+        .trash-can::before { 
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 31px; 
+            height: 8px;
+            background-color: #4a5568;
+            border-radius: 2px;
+        }
+        .star-rating-popup {
+            position: absolute;
+            font-size: 20px;
+            color: #FFD700; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            animation: fadeOutStars 2s forwards;
+            z-index: 20; 
+            pointer-events: none; 
+        }
+        @keyframes fadeOutStars {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            70% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+        }
+        .upgrade-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #667386;
+        }
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px;
+            background-color: #2d3748;
+            border-radius: 4px;
+        }
+        .upgrade-item span {
+            font-size: 0.9em;
+        }
+        .buy-button {
+            background-color: #48bb78; 
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .buy-button:hover:not(:disabled) {
+            background-color: #38a169;
+        }
+        .buy-button:disabled {
+            background-color: #718096;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-800 flex flex-col items-center justify-center min-h-screen p-4 text-white">
+
+    <h1 class="text-4xl font-bold mb-6 text-yellow-400">Cam's Phillups: Spud Sprint!</h1>
+
+    <div class="flex flex-col md:flex-row gap-8 items-center md:items-start">
+        <div id="mapArea" class="map-area rounded-lg shadow-2xl">
+            <div id="foodTruck" class="food-truck">CAM'S<br>PHILLUPS</div>
+            <div id="kitchen" class="kitchen">
+                <span class="kitchen-sign">Spuds!</span>
+                <span id="kitchenText" class="kitchen-text">Cam's Kitchen</span>
+                <div id="kitchenProgressContainer" class="kitchen-progress-container">
+                    <div id="kitchenProgressBar" class="kitchen-progress-bar"></div>
+                </div>
+            </div>
+            <div class="building" style="width: 80px; height: 120px; top: 50px; left: 50px; background-color: #e53e3e;"></div> 
+            <div class="building" style="width: 60px; height: 80px; top: 80px; left: 150px; background-color: #dd6b20;"></div> 
+            <div class="building" style="width: 100px; height: 150px; top: 200px; left: 650px; background-color: #38a169;"></div> 
+            <div class="building" style="width: 70px; height: 100px; top: 180px; left: 20px; background-color: #faf089;"></div> 
+            <div class="building" style="width: 120px; height: 100px; top: 450px; left: 300px; background-color: #3182ce;"></div> 
+            <div class="building" style="width: 90px; height: 70px; top: 500px; left: 680px; background-color: #805ad5;"></div> 
+            <div class="road"></div>
+            <div class="tree" style="top: 250px; left: 100px;"></div>
+            <div class="bush" style="top: 400px; left: 500px;"></div>
+            <div class="tree" style="top: 100px; left: 700px;"></div>
+            <div class="bush" style="top: 50px; left: 300px;"></div>
+            <div class="tree" style="top: 480px; left: 150px;"></div>
+            <div class="bush" style="top: 200px; left: 450px;"></div>
+            <div class="trash-can" style="top: 350px; left: 750px;"></div>
+            <div class="trash-can" style="top: 80px; left: 400px;"></div>
+            <div class="trash-can" style="top: 550px; left: 50px;"></div>
+        </div>
+
+        <div class="ui-panel bg-gray-700 p-6 rounded-lg shadow-xl w-full md:w-80 mt-4 md:mt-0"> 
+            <h2 class="text-2xl font-semibold mb-4 text-yellow-300">Game Info</h2>
+            <div id="scoreDisplay" class="text-xl mb-2">Score: <span id="score">0</span></div>
+            <div id="moneyDisplay" class="text-xl mb-2">Money: $<span id="money">0</span></div>
+            <div id="livesDisplay" class="text-xl mb-2">Lives Left: <span id="lives">3</span></div>
+            <div id="carryingDisplayContainer" class="text-lg mb-4 h-auto min-h-[2.5rem]">Carrying: <span id="carryingDisplay" class="font-semibold text-yellow-200">Nothing</span></div>
+            <div id="messageDisplay" class="text-md text-red-400 h-16 mb-2">Click map to move!</div>
+            <button id="startButton" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-4 rounded-lg text-xl transition duration-150 ease-in-out mb-4">
+                Start Game
+            </button>
+            
+            <div id="upgradesSection" class="upgrade-section">
+                <h3 class="text-xl font-semibold mb-3 text-yellow-300">Shop</h3>
+                <h4 class="text-lg font-semibold mt-2 mb-2 text-yellow-300">Truck Upgrades</h4>
+                <div id="truckUpgradesContainer">
+                    </div>
+                <h4 class="text-lg font-semibold mt-4 mb-2 text-yellow-300">Unlock Spuds</h4>
+                <div id="spudUnlocksContainer">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="kitchenMenuOverlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="kitchenMenuTitle">Cam's Kitchen - What to Prepare?</h3>
+            <div id="kitchenMenuItemsContainer">
+                </div>
+            <button id="closeKitchenMenuButton" class="modal-button mt-4 !bg-red-500 hover:!bg-red-600">Close Menu</button>
+        </div>
+    </div>
+
+    <div id="ingredientStationOverlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="ingredientStationTitle">Add Ingredients for: Cheesy Spud</h3>
+            <p id="nextIngredientDisplay">Next: Cheese</p>
+            <div>
+                <button class="ingredient-button" data-ingredient="Cheese">🧀 Cheese</button>
+                <button class="ingredient-button" data-ingredient="Bacon">🥓 Bacon</button>
+                <button class="ingredient-button" data-ingredient="Chives">🌿 Chives</button>
+            </div>
+            <button id="cancelIngredientButton" class="modal-button mt-4 !bg-gray-500 hover:!bg-gray-600">Cancel</button>
+        </div>
+    </div>
+
+
+    <script>
+        const mapArea = document.getElementById('mapArea');
+        const foodTruckElement = document.getElementById('foodTruck');
+        const kitchenElement = document.getElementById('kitchen');
+        const kitchenTextElement = document.getElementById('kitchenText');
+        const kitchenProgressBar = document.getElementById('kitchenProgressBar');
+
+        const scoreDisplay = document.getElementById('score');
+        const moneyDisplay = document.getElementById('money'); 
+        const livesDisplay = document.getElementById('lives');
+        const carryingDisplaySpan = document.getElementById('carryingDisplay'); 
+        const messageDisplay = document.getElementById('messageDisplay');
+        const startButton = document.getElementById('startButton');
+
+        const kitchenMenuOverlay = document.getElementById('kitchenMenuOverlay');
+        const kitchenMenuItemsContainer = document.getElementById('kitchenMenuItemsContainer');
+        const closeKitchenMenuButton = document.getElementById('closeKitchenMenuButton');
+
+        const ingredientStationOverlay = document.getElementById('ingredientStationOverlay');
+        const ingredientStationTitle = document.getElementById('ingredientStationTitle');
+        const nextIngredientDisplay = document.getElementById('nextIngredientDisplay');
+        const ingredientButtons = ingredientStationOverlay.querySelectorAll('.ingredient-button'); 
+        const cancelIngredientButton = document.getElementById('cancelIngredientButton');
+
+
+        const truckUpgradesContainer = document.getElementById('truckUpgradesContainer'); 
+        const spudUnlocksContainer = document.getElementById('spudUnlocksContainer');
+
+        const MAP_WIDTH = 800;
+        const MAP_HEIGHT = 600;
+        const TRUCK_WIDTH = 75; 
+        const TRUCK_HEIGHT = 45; 
+        const BASE_TRUCK_SPEED = 5.0; 
+        let currentTruckSpeed = BASE_TRUCK_SPEED;
+
+        const CUSTOMER_SIZE = 40;
+        const DELIVERY_RADIUS = 25; 
+        const CUSTOMER_SPAWN_INTERVAL = 4500; 
+        const INITIAL_PATIENCE = 18000; 
+        
+        const BASE_POTATO_TYPES_DEFS = [ 
+            { name: "Classic Spud", emoji: "🥔", ingredients: [], basePrice: 3, unlocked: true },
+            { name: "Cheesy Spud", emoji: "🧀", ingredients: ["Cheese"], basePrice: 4, unlocked: true }
+        ];
+        const BONUS_POTATO_TYPES_DEFS = [ 
+            { name: "Loaded Spud", emoji: "🥓", ingredients: ["Cheese", "Bacon", "Chives"], basePrice: 5, unlockCost: 50, unlocked: false },
+            { name: "Volcano Spud", emoji: "🌶️", ingredients: ["Cheese", "Bacon"], basePrice: 6, unlockCost: 75, unlocked: false } 
+        ];
+        let allPotatoTypesMasterList = []; 
+
+        const TRUCK_UPGRADES_DATA = [
+            { id: "speed1", type: "speed", name: "Speed Boost I", cost: 40, value: 0.5, purchased: false, desc: "+0.5 Speed" },
+            { id: "speed2", type: "speed", name: "Speed Boost II", cost: 70, value: 0.7, purchased: false, requires: "speed1", desc: "+0.7 Speed" },
+            { id: "inv1", type: "inventory", name: "Spud Holder +1", cost: 60, value: 1, purchased: false, desc: "+1 Max Spud" },
+            { id: "inv2", type: "inventory", name: "Spud Holder +2", cost: 100, value: 1, purchased: false, requires: "inv1", desc: "+1 Max Spud" } 
+        ];
+        const BASE_INVENTORY_SLOTS = 1;
+
+
+        const KITCHEN_X = 50;
+        const KITCHEN_Y = MAP_HEIGHT - 120; 
+        const KITCHEN_WIDTH = 110; 
+        const KITCHEN_HEIGHT = 90;  
+        const PICKUP_RADIUS = 30; 
+        const PREPARATION_TIME = 500; 
+        const FRAME_DURATION = 1000 / 60; 
+
+        const TABLE_POSITIONS = [
+            { x: 200, y: 100, occupiedBy: null, element: null },
+            { x: 600, y: 150, occupiedBy: null, element: null },
+            { x: 350, y: 300, occupiedBy: null, element: null },
+            { x: 700, y: 450, occupiedBy: null, element: null }
+        ];
+        const MAX_CUSTOMERS = TABLE_POSITIONS.length; 
+
+        let truck = {
+            x: MAP_WIDTH / 2 - TRUCK_WIDTH / 2,
+            y: MAP_HEIGHT / 2 - TRUCK_HEIGHT / 2,
+            targetX: MAP_WIDTH / 2 - TRUCK_WIDTH / 2,
+            targetY: MAP_HEIGHT / 2 - TRUCK_HEIGHT / 2,
+            angle: 0,
+            inventory: [], 
+            maxInventorySlots: BASE_INVENTORY_SLOTS,
+            isPreparing: false, 
+            preparationProgress: 0,
+            potatoBeingPrepared: null,
+            isAddingIngredients: false, 
+            isChoosingInKitchenMenu: false, // Added state for menu
+            requiredIngredients: [],
+            currentIngredientIndex: 0
+        };
+
+        let customers = [];
+        let score = 0;
+        let moneyEarned = 0; 
+        let lives = 3;
+        let gameActive = false;
+        let customerSpawnTimeout;
+        let animationFrameId;
+        
+        let keysPressed = {}; 
+        let lastMoveWasKeyInput = false; 
+
+        kitchenElement.style.left = `${KITCHEN_X}px`;
+        kitchenElement.style.top = `${KITCHEN_Y}px`;
+        foodTruckElement.style.left = `${truck.x}px`;
+        foodTruckElement.style.top = `${truck.y}px`;
+
+        function initializeTables() {
+            TABLE_POSITIONS.forEach(table => {
+                if (table.element) table.element.remove();
+                const tableElement = document.createElement('div');
+                tableElement.classList.add('customer-table');
+                tableElement.style.left = `${table.x - 25}px`; 
+                tableElement.style.top = `${table.y - 25}px`;  
+                mapArea.appendChild(tableElement);
+                table.element = tableElement; 
+                table.occupiedBy = null; 
+            });
+        }
+        initializeTables(); 
+
+
+        function startGame() {
+            if (gameActive) return;
+            gameActive = true;
+            score = 0;
+            moneyEarned = 0; 
+            lives = 3;
+            
+            currentTruckSpeed = BASE_TRUCK_SPEED;
+            truck.maxInventorySlots = BASE_INVENTORY_SLOTS;
+            TRUCK_UPGRADES_DATA.forEach(upg => upg.purchased = false);
+            allPotatoTypesMasterList = [
+                ...JSON.parse(JSON.stringify(BASE_POTATO_TYPES_DEFS)),
+                ...JSON.parse(JSON.stringify(BONUS_POTATO_TYPES_DEFS))
+            ];
+
+
+            truck.inventory = [];
+            truck.isPreparing = false;
+            truck.preparationProgress = 0;
+            truck.potatoBeingPrepared = null;
+            truck.isAddingIngredients = false;
+            truck.isChoosingInKitchenMenu = false; // Reset menu state
+            truck.requiredIngredients = [];
+            truck.currentIngredientIndex = 0;
+            keysPressed = {};
+            lastMoveWasKeyInput = false;
+            kitchenMenuOverlay.classList.add('hidden');
+            ingredientStationOverlay.classList.add('hidden');
+            kitchenProgressBar.style.width = '0%';
+            kitchenTextElement.textContent = "Cam's Kitchen";
+
+            customers.forEach(c => c.element.remove());
+            customers = [];
+            TABLE_POSITIONS.forEach(table => table.occupiedBy = null); 
+
+            truck.x = MAP_WIDTH / 2 - TRUCK_WIDTH / 2;
+            truck.y = MAP_HEIGHT / 2 - TRUCK_HEIGHT / 2;
+            truck.targetX = truck.x;
+            truck.targetY = truck.y;
+            updateScoreDisplay();
+            updateMoneyDisplay(); 
+            updateLivesDisplay();
+            updateCarryingDisplay();
+            renderUpgradesUI(); 
+            messageDisplay.textContent = "Head to the Kitchen for spuds!";
+            startButton.textContent = "Game Running...";
+            startButton.disabled = true;
+            
+            clearTimeout(customerSpawnTimeout);
+            spawnCustomer();
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function gameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationFrameId);
+            clearTimeout(customerSpawnTimeout);
+            messageDisplay.textContent = `Game Over! Final Score: ${score}. Money: $${moneyEarned}`;
+            startButton.textContent = "Restart Game";
+            startButton.disabled = false;
+            truck.isPreparing = false; 
+            truck.isAddingIngredients = false;
+            truck.isChoosingInKitchenMenu = false; // Reset menu state
+            kitchenMenuOverlay.classList.add('hidden');
+            ingredientStationOverlay.classList.add('hidden');
+            kitchenProgressBar.style.width = '0%';
+            kitchenTextElement.textContent = "Cam's Kitchen";
+        }
+
+        function updateScoreDisplay() { scoreDisplay.textContent = `Score: ${score}`; }
+        function updateMoneyDisplay() { moneyDisplay.textContent = `${moneyEarned}`; } 
+        function updateLivesDisplay() { livesDisplay.textContent = `Lives Left: ${lives}`; }
+        
+        function updateCarryingDisplay() {
+            if (truck.inventory.length === 0) {
+                carryingDisplaySpan.textContent = "Nothing";
+            } else {
+                carryingDisplaySpan.textContent = truck.inventory.map(p => p.emoji).join(' ');
+            }
+            carryingDisplaySpan.parentElement.title = `Slots: ${truck.inventory.length}/${truck.maxInventorySlots}`;
+        }
+
+
+        function renderUpgradesUI() {
+            truckUpgradesContainer.innerHTML = '';
+            TRUCK_UPGRADES_DATA.forEach((upgrade) => {
+                const item = document.createElement('div');
+                item.classList.add('upgrade-item');
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = `${upgrade.name} (${upgrade.desc})`;
+                item.appendChild(nameSpan);
+
+                const buyButton = document.createElement('button');
+                buyButton.classList.add('buy-button');
+                if (upgrade.purchased) {
+                    buyButton.textContent = 'Owned';
+                    buyButton.disabled = true;
+                } else {
+                    buyButton.textContent = `Buy ($${upgrade.cost})`;
+                    buyButton.disabled = moneyEarned < upgrade.cost;
+                    if (upgrade.requires && !TRUCK_UPGRADES_DATA.find(u => u.id === upgrade.requires)?.purchased) {
+                        buyButton.disabled = true;
+                        buyButton.title = `Requires ${TRUCK_UPGRADES_DATA.find(u => u.id === upgrade.requires)?.name}`;
+                    }
+                    buyButton.onclick = () => buyTruckUpgrade(upgrade.id);
+                }
+                item.appendChild(buyButton);
+                truckUpgradesContainer.appendChild(item);
+            });
+
+            spudUnlocksContainer.innerHTML = '';
+            allPotatoTypesMasterList.filter(spud => spud.unlockCost).forEach((spud) => { 
+                const item = document.createElement('div');
+                item.classList.add('upgrade-item');
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = `Unlock ${spud.emoji} ${spud.name}`;
+                item.appendChild(nameSpan);
+
+                const buyButton = document.createElement('button');
+                buyButton.classList.add('buy-button');
+                if (spud.unlocked) {
+                    buyButton.textContent = 'Unlocked';
+                    buyButton.disabled = true;
+                } else {
+                    buyButton.textContent = `Unlock ($${spud.unlockCost})`;
+                    buyButton.disabled = moneyEarned < spud.unlockCost;
+                    buyButton.onclick = () => unlockBonusSpud(spud.name);
+                }
+                item.appendChild(buyButton);
+                spudUnlocksContainer.appendChild(item);
+            });
+        }
+
+        function buyTruckUpgrade(upgradeId) {
+            const upgrade = TRUCK_UPGRADES_DATA.find(u => u.id === upgradeId);
+            if (upgrade && moneyEarned >= upgrade.cost && !upgrade.purchased) {
+                moneyEarned -= upgrade.cost;
+                if (upgrade.type === "speed") {
+                    currentTruckSpeed += upgrade.value;
+                } else if (upgrade.type === "inventory") {
+                    truck.maxInventorySlots += upgrade.value;
+                }
+                upgrade.purchased = true;
+                updateMoneyDisplay();
+                updateCarryingDisplay(); 
+                renderUpgradesUI();
+                messageDisplay.textContent = `${upgrade.name} purchased!`;
+            }
+        }
+
+        function unlockBonusSpud(spudName) { 
+            const spudToUnlock = allPotatoTypesMasterList.find(s => s.name === spudName);
+            if (spudToUnlock && moneyEarned >= spudToUnlock.unlockCost && !spudToUnlock.unlocked) {
+                moneyEarned -= spudToUnlock.unlockCost;
+                spudToUnlock.unlocked = true;
+                updateMoneyDisplay();
+                renderUpgradesUI();
+                messageDisplay.textContent = `${spudToUnlock.emoji} ${spudToUnlock.name} unlocked!`;
+            }
+        }
+
+        mapArea.addEventListener('click', (event) => {
+            if (!gameActive || truck.isPreparing || truck.isAddingIngredients || truck.isChoosingInKitchenMenu) return; 
+            keysPressed = {}; 
+            lastMoveWasKeyInput = false; 
+            const rect = mapArea.getBoundingClientRect();
+            truck.targetX = event.clientX - rect.left - TRUCK_WIDTH / 2;
+            truck.targetY = event.clientY - rect.top - TRUCK_HEIGHT / 2;
+            truck.targetX = Math.max(0, Math.min(MAP_WIDTH - TRUCK_WIDTH, truck.targetX));
+            truck.targetY = Math.max(0, Math.min(MAP_HEIGHT - TRUCK_HEIGHT, truck.targetY));
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (!gameActive || truck.isPreparing || truck.isAddingIngredients || truck.isChoosingInKitchenMenu) return;
+            if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(event.key.toLowerCase())) {
+                 event.preventDefault(); 
+            }
+            keysPressed[event.key.toLowerCase()] = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (!gameActive) return;
+            const key = event.key.toLowerCase();
+            delete keysPressed[key];
+            if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key) && 
+                !Object.values(keysPressed).some(val => val === true)) { 
+                if (lastMoveWasKeyInput) { 
+                    truck.targetX = truck.x;
+                    truck.targetY = truck.y;
+                    lastMoveWasKeyInput = false;
+                }
+            }
+        });
+
+        startButton.addEventListener('click', startGame);
+        
+        ingredientButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (truck.isAddingIngredients) handleIngredientClick(button.dataset.ingredient);
+            });
+        });
+        cancelIngredientButton.addEventListener('click', () => {
+            truck.isAddingIngredients = false;
+            truck.potatoBeingPrepared = null; 
+            truck.isChoosingInKitchenMenu = false; 
+            ingredientStationOverlay.classList.add('hidden');
+            kitchenTextElement.textContent = "Cam's Kitchen"; 
+            messageDisplay.textContent = "Preparation cancelled.";
+        });
+
+        closeKitchenMenuButton.addEventListener('click', () => {
+            kitchenMenuOverlay.classList.add('hidden');
+            truck.isChoosingInKitchenMenu = false; 
+            messageDisplay.textContent = "Left the kitchen.";
+        });
+
+
+        function getAvailablePotatoTypesForOrder() { 
+            return allPotatoTypesMasterList.filter(pt => pt.unlocked);
+        }
+        function getUnlockedPotatoTypesForKitchenMenu() { 
+            return allPotatoTypesMasterList.filter(pt => pt.unlocked);
+        }
+
+
+        function spawnCustomer() {
+            if (!gameActive || customers.length >= MAX_CUSTOMERS) {
+                if (gameActive) customerSpawnTimeout = setTimeout(spawnCustomer, CUSTOMER_SPAWN_INTERVAL / 2);
+                return;
+            }
+            const availableTables = TABLE_POSITIONS.filter(table => !table.occupiedBy);
+            if (availableTables.length === 0) {
+                if (gameActive) customerSpawnTimeout = setTimeout(spawnCustomer, CUSTOMER_SPAWN_INTERVAL); 
+                return;
+            }
+            const targetTable = availableTables[Math.floor(Math.random() * availableTables.length)];
+            const customerElement = document.createElement('div');
+            customerElement.classList.add('customer');
+
+            const orderableSpuds = getAvailablePotatoTypesForOrder();
+            if (orderableSpuds.length === 0) { 
+                 console.warn("No spuds available for customer order! Check unlock logic."); 
+                 if (gameActive) customerSpawnTimeout = setTimeout(spawnCustomer, CUSTOMER_SPAWN_INTERVAL);
+                 return;
+            }
+            const potatoOrder = orderableSpuds[Math.floor(Math.random() * orderableSpuds.length)];
+            
+            const orderBubble = document.createElement('div');
+            orderBubble.classList.add('order-bubble');
+            orderBubble.textContent = `${potatoOrder.emoji} ${potatoOrder.name}`;
+            const emojiSpan = document.createElement('span');
+            emojiSpan.textContent = ['😀', '😋', '😃', '😊'][Math.floor(Math.random() * 4)];
+            const patienceContainer = document.createElement('div');
+            patienceContainer.classList.add('patience-bar-container');
+            const patienceBar = document.createElement('div');
+            patienceBar.classList.add('patience-bar');
+            patienceBar.style.width = '100%';
+            patienceContainer.appendChild(patienceBar);
+            customerElement.appendChild(orderBubble);
+            customerElement.appendChild(emojiSpan);
+            customerElement.appendChild(patienceContainer);
+            const customerX = targetTable.x - CUSTOMER_SIZE / 2;
+            const customerY = targetTable.y - CUSTOMER_SIZE / 2;
+            customerElement.style.left = `${customerX}px`;
+            customerElement.style.top = `${customerY}px`;
+            mapArea.appendChild(customerElement);
+            const customer = {
+                id: Date.now(), x: customerX, y: customerY, element: customerElement,
+                order: potatoOrder, patience: INITIAL_PATIENCE, startTime: Date.now(),
+                patienceBarElement: patienceBar, tableId: TABLE_POSITIONS.indexOf(targetTable) 
+            };
+            customers.push(customer);
+            targetTable.occupiedBy = customer.id; 
+            customers.sort((a, b) => a.startTime - b.startTime); 
+            customerSpawnTimeout = setTimeout(spawnCustomer, CUSTOMER_SPAWN_INTERVAL + Math.random() * 1000); 
+        }
+        
+        function handleKeyBasedMovement() {
+            if (truck.isPreparing || truck.isAddingIngredients || truck.isChoosingInKitchenMenu) return false;
+            let dx = 0; dy = 0; let keyInputDetected = false;
+            if (keysPressed['w'] || keysPressed['arrowup']) { dy -= currentTruckSpeed; keyInputDetected = true; }
+            if (keysPressed['s'] || keysPressed['arrowdown']) { dy += currentTruckSpeed; keyInputDetected = true; }
+            if (keysPressed['a'] || keysPressed['arrowleft']) { dx -= currentTruckSpeed; keyInputDetected = true; }
+            if (keysPressed['d'] || keysPressed['arrowright']) { dx += currentTruckSpeed; keyInputDetected = true; }
+
+            if (keyInputDetected) {
+                lastMoveWasKeyInput = true; 
+                truck.x += dx; truck.y += dy;
+                if (dx !== 0 || dy !== 0) truck.angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                return true; 
+            }
+            return false; 
+        }
+
+        function moveTruck() {
+            if (truck.isPreparing || truck.isAddingIngredients || truck.isChoosingInKitchenMenu) { 
+                truck.targetX = truck.x; truck.targetY = truck.y;
+            } else {
+                const movedByKey = handleKeyBasedMovement();
+                if (!movedByKey && !lastMoveWasKeyInput) { 
+                    const targetDx = truck.targetX - truck.x;
+                    const targetDy = truck.targetY - truck.y;
+                    const distanceToTarget = Math.hypot(targetDx, targetDy);
+                    if (distanceToTarget < currentTruckSpeed) {
+                        truck.x = truck.targetX; truck.y = truck.targetY;
+                    } else if (distanceToTarget > 0) { 
+                        truck.x += (targetDx / distanceToTarget) * currentTruckSpeed;
+                        truck.y += (targetDy / distanceToTarget) * currentTruckSpeed;
+                        truck.angle = Math.atan2(targetDy, targetDx) * (180 / Math.PI);
+                    }
+                }
+            }
+            truck.x = Math.max(0, Math.min(MAP_WIDTH - TRUCK_WIDTH, truck.x));
+            truck.y = Math.max(0, Math.min(MAP_HEIGHT - TRUCK_HEIGHT, truck.y));
+            foodTruckElement.style.left = `${truck.x}px`;
+            foodTruckElement.style.top = `${truck.y}px`;
+            foodTruckElement.style.transform = `rotate(${truck.angle}deg)`;
+        }
+
+        function openKitchenMenu() {
+            truck.isChoosingInKitchenMenu = true; // Set state when menu opens
+            kitchenMenuItemsContainer.innerHTML = ''; 
+            const availableSpuds = getUnlockedPotatoTypesForKitchenMenu();
+            
+            availableSpuds.forEach(spud => {
+                const button = document.createElement('button');
+                button.classList.add('modal-button');
+                button.textContent = `Prepare ${spud.emoji} ${spud.name}`;
+                button.onclick = () => {
+                    kitchenMenuOverlay.classList.add('hidden');
+                    truck.isChoosingInKitchenMenu = false; // Reset state on selection
+                    truck.potatoBeingPrepared = spud; 
+                    if (truck.potatoBeingPrepared.ingredients.length > 0) {
+                        truck.isAddingIngredients = true;
+                        truck.requiredIngredients = [...truck.potatoBeingPrepared.ingredients];
+                        truck.currentIngredientIndex = 0;
+                        ingredientStationTitle.textContent = `Add Ingredients for: ${truck.potatoBeingPrepared.emoji} ${truck.potatoBeingPrepared.name}`;
+                        updateNextIngredientDisplay();
+                        ingredientButtons.forEach(btn => btn.classList.remove('added')); 
+                        ingredientStationOverlay.classList.remove('hidden');
+                        messageDisplay.textContent = `At Ingredient Station for ${truck.potatoBeingPrepared.name}!`;
+                        kitchenTextElement.textContent = "ADD_INGREDIENTS";
+                    } else {
+                        truck.isPreparing = true;
+                        truck.preparationProgress = 0;
+                        kitchenTextElement.textContent = `PREPARING...`;
+                        kitchenProgressBar.style.width = '0%';
+                        messageDisplay.textContent = `Preparing ${truck.potatoBeingPrepared.emoji} ${truck.potatoBeingPrepared.name}...`;
+                    }
+                };
+                kitchenMenuItemsContainer.appendChild(button);
+            });
+            kitchenMenuOverlay.classList.remove('hidden');
+            messageDisplay.textContent = "Choose a spud to prepare from the menu.";
+        }
+
+
+        function checkKitchenInteraction() {
+            if (truck.inventory.length >= truck.maxInventorySlots || truck.isPreparing || truck.isAddingIngredients || truck.isChoosingInKitchenMenu) {
+                if(truck.inventory.length >= truck.maxInventorySlots && !truck.isPreparing && !truck.isAddingIngredients && !truck.isChoosingInKitchenMenu){
+                     const distToKitchen = Math.hypot( (truck.x + TRUCK_WIDTH/2) - (KITCHEN_X + KITCHEN_WIDTH/2), (truck.y + TRUCK_HEIGHT/2) - (KITCHEN_Y + KITCHEN_HEIGHT/2) );
+                     if(distToKitchen < PICKUP_RADIUS + Math.max(KITCHEN_WIDTH, KITCHEN_HEIGHT) / 3) {
+                        messageDisplay.textContent = "Truck inventory is full!";
+                     }
+                }
+                return;
+            }
+
+            const kitchenCenterX = KITCHEN_X + KITCHEN_WIDTH / 2;
+            const kitchenCenterY = KITCHEN_Y + KITCHEN_HEIGHT / 2;
+            const truckCenterX = truck.x + TRUCK_WIDTH / 2;
+            const truckCenterY = truck.y + TRUCK_HEIGHT / 2;
+            const distToKitchen = Math.hypot(truckCenterX - kitchenCenterX, truckCenterY - kitchenCenterY);
+
+            if (distToKitchen < PICKUP_RADIUS + Math.max(KITCHEN_WIDTH, KITCHEN_HEIGHT) / 3) {
+                truck.targetX = kitchenCenterX - TRUCK_WIDTH / 2; 
+                truck.targetY = kitchenCenterY - TRUCK_HEIGHT / 2;
+                truck.x = truck.targetX; truck.y = truck.targetY; 
+                keysPressed = {}; lastMoveWasKeyInput = false;
+                openKitchenMenu(); 
+            }
+        }
+
+        function handleIngredientClick(ingredientClicked) {
+            if (!truck.isAddingIngredients) return;
+            const expectedIngredient = truck.requiredIngredients[truck.currentIngredientIndex];
+            if (ingredientClicked === expectedIngredient) {
+                const clickedButton = Array.from(ingredientButtons).find(btn => btn.dataset.ingredient === ingredientClicked);
+                if(clickedButton) clickedButton.classList.add('added');
+                truck.currentIngredientIndex++;
+                if (truck.currentIngredientIndex >= truck.requiredIngredients.length) {
+                    ingredientStationOverlay.classList.add('hidden');
+                    truck.isAddingIngredients = false;
+                    truck.isPreparing = true; 
+                    truck.preparationProgress = 0;
+                    kitchenTextElement.textContent = `FINISHING...`;
+                    kitchenProgressBar.style.width = '0%';
+                    messageDisplay.textContent = `Finishing ${truck.potatoBeingPrepared.emoji} ${truck.potatoBeingPrepared.name}...`;
+                } else {
+                    updateNextIngredientDisplay();
+                }
+            } else {
+                messageDisplay.textContent = `Wrong ingredient! Try again for ${truck.potatoBeingPrepared.name}.`;
+                truck.currentIngredientIndex = 0; 
+                ingredientButtons.forEach(btn => btn.classList.remove('added'));
+                updateNextIngredientDisplay();
+            }
+        }
+
+        function updateNextIngredientDisplay() {
+            if (truck.isAddingIngredients && truck.currentIngredientIndex < truck.requiredIngredients.length) {
+                nextIngredientDisplay.textContent = `Next: ${truck.requiredIngredients[truck.currentIngredientIndex]}`;
+            } else if (truck.isAddingIngredients) { 
+                nextIngredientDisplay.textContent = "All ingredients added!";
+            }
+        }
+
+        function updatePreparation() { 
+            if (!truck.isPreparing) return;
+            truck.preparationProgress += FRAME_DURATION; 
+            const progressPercent = Math.min(100, (truck.preparationProgress / PREPARATION_TIME) * 100);
+            kitchenProgressBar.style.width = `${progressPercent}%`;
+            if (truck.preparationProgress >= PREPARATION_TIME) {
+                if (truck.inventory.length < truck.maxInventorySlots) {
+                    truck.inventory.push(truck.potatoBeingPrepared);
+                    messageDisplay.textContent = `${truck.potatoBeingPrepared.emoji} ${truck.potatoBeingPrepared.name} added to truck!`;
+                } else {
+                     messageDisplay.textContent = `Inventory full! ${truck.potatoBeingPrepared.emoji} not added.`;
+                }
+                truck.isPreparing = false;
+                truck.potatoBeingPrepared = null;
+                truck.preparationProgress = 0;
+                updateCarryingDisplay();
+                kitchenTextElement.textContent = "Cam's Kitchen";
+                kitchenProgressBar.style.width = '0%';
+                renderUpgradesUI(); 
+            }
+        }
+        
+        function displayStarRating(x, y, numStars) {
+            const starElement = document.createElement('div');
+            starElement.classList.add('star-rating-popup');
+            starElement.innerHTML = '⭐'.repeat(numStars);
+            starElement.style.left = `${x + CUSTOMER_SIZE / 2 - (numStars * 10)}px`; 
+            starElement.style.top = `${y - 25}px`; 
+            mapArea.appendChild(starElement);
+            setTimeout(() => {
+                starElement.remove();
+            }, 2000); 
+        }
+
+        function updateCustomers() {
+            for (let i = customers.length - 1; i >= 0; i--) { 
+                const customer = customers[i];
+                const elapsedTime = Date.now() - customer.startTime;
+                const patienceLeft = Math.max(0, INITIAL_PATIENCE - elapsedTime);
+                const patiencePercent = (patienceLeft / INITIAL_PATIENCE) * 100;
+                customer.patienceBarElement.style.width = `${patiencePercent}%`;
+
+                if (patiencePercent < 30) customer.patienceBarElement.style.backgroundColor = '#e53e3e';
+                else if (patiencePercent < 60) customer.patienceBarElement.style.backgroundColor = '#f6e05e';
+                else customer.patienceBarElement.style.backgroundColor = '#48bb78';
+
+                if (patienceLeft <= 0) {
+                    messageDisplay.textContent = `Customer for ${customer.order.name} left angry!`;
+                    customer.element.remove();
+                    TABLE_POSITIONS[customer.tableId].occupiedBy = null; 
+                    customers.splice(i, 1);
+                    lives--;
+                    updateLivesDisplay();
+                    renderUpgradesUI(); 
+                    if (lives <= 0) gameOver();
+                    continue; 
+                }
+                const truckCenterX = truck.x + TRUCK_WIDTH / 2;
+                const truckCenterY = truck.y + TRUCK_HEIGHT / 2;
+                const customerCenterX = customer.x + CUSTOMER_SIZE / 2;
+                const customerCenterY = customer.y + CUSTOMER_SIZE / 2;
+                const distToCustomer = Math.hypot(truckCenterX - customerCenterX, truckCenterY - customerCenterY);
+
+                if (distToCustomer < DELIVERY_RADIUS + CUSTOMER_SIZE / 2) {
+                    let delivered = false;
+                    for (let j = 0; j < truck.inventory.length; j++) {
+                        if (truck.inventory[j].name === customer.order.name) {
+                            score += 100; 
+                            let deliveryMoney = customer.order.basePrice || 3; 
+                            let stars = 0;
+
+                            if (patiencePercent >= 90) { stars = 5; deliveryMoney += 3; }
+                            else if (patiencePercent >= 70) { stars = 4; deliveryMoney += 2; }
+                            else if (patiencePercent >= 50) { stars = 3; deliveryMoney += 1; }
+                            else if (patiencePercent >= 30) { stars = 2; }
+                            else { stars = 1; }
+                            
+                            moneyEarned += deliveryMoney;
+                            updateMoneyDisplay();
+                            displayStarRating(customer.x, customer.y, stars);
+
+                            updateScoreDisplay(); 
+                            messageDisplay.textContent = `Delivered ${customer.order.name}! +$${deliveryMoney} & ${stars}⭐`;
+                            
+                            truck.inventory.splice(j, 1); 
+                            updateCarryingDisplay();
+                            
+                            customer.element.remove();
+                            TABLE_POSITIONS[customer.tableId].occupiedBy = null; 
+                            customers.splice(i, 1);
+                            renderUpgradesUI(); 
+                            delivered = true;
+                            break; 
+                        }
+                    }
+                    if (!delivered && truck.inventory.length > 0) {
+                         messageDisplay.textContent = `Don't have ${customer.order.name} for this customer!`;
+                    } else if (!delivered && truck.inventory.length === 0 && !truck.isPreparing && !truck.isAddingIngredients) {
+                        messageDisplay.textContent = `Need a ${customer.order.name} for this customer!`;
+                    }
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            moveTruck(); 
+            checkKitchenInteraction(); 
+            if (truck.isPreparing) updatePreparation(); 
+            updateCustomers(); 
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        messageDisplay.textContent = "Click Start Game!";
+        updateCarryingDisplay(); 
+        renderUpgradesUI(); 
+    </script>
+</body>
+</html>
